@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArbitrajeIntegral - Dashboard Pro Multilateral</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bg-body: #0a0f1d;
+            --bg-card: rgba(16, 24, 48, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.4);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.4);
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body { 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            padding-bottom: 2rem;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.3) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(17, 24, 39, 0.5) 0px, transparent 50%);
+        }
+
+        .dashboard-container { max-width: 1300px; margin: 0 auto; padding: 20px; }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            height: 100%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px var(--primary-glow);
+        }
+        .stat-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-value { font-size: 1.75rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
+        .stat-sub { font-size: 0.8rem; color: var(--text-muted); }
+        .text-buy { color: var(--success) !important; text-shadow: 0 0 10px var(--success-glow); }
+        .text-sell { color: var(--danger) !important; }
+
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 24px;
+        }
+        .section-title { 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            margin-bottom: 20px; 
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .bg-rentable { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); animation: pulse 2s infinite; }
+        .bg-no-rentable { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .bg-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+
+        .status-dot {
+            height: 8px;
+            width: 8px;
+            background-color: var(--text-muted);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .status-dot.active { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
+        .status-dot.error { background-color: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+        .custom-table { width: 100%; font-size: 0.9rem; }
+        .custom-table th { color: var(--text-muted); font-weight: 600; padding: 14px 10px; border-bottom: 1px solid var(--border-color); text-align: left; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+        .custom-table td { padding: 14px 10px; border-bottom: 1px solid var(--border-color); color: #e2e8f0; }
+        .custom-table tr:hover td { background: rgba(255, 255, 255, 0.03); }
+        .price-up { color: var(--success); font-weight: 700; }
+        .price-down { color: var(--danger); font-weight: 700; }
+
+        .wallet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .wallet-card {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+        .wallet-card:hover { border-color: var(--primary); background: rgba(30, 41, 59, 0.8); }
+        .wallet-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 6px; display: flex; align-items: center; color: #fff; }
+        .wallet-amount { 
+            font-size: 1.35rem; 
+            font-weight: 800; 
+            cursor: pointer; 
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .wallet-amount:hover { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+        .wallet-equiv { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+        
+        .wallet-code {
+            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-right: 10px;
+            color: #cbd5e1;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .editable-input {
+            font-size: 1.25rem;
+            font-weight: 700;
+            width: 100%;
+            border: 1px solid var(--primary);
+            background: #0f172a;
+            color: #fff;
+            border-radius: 6px;
+            padding: 2px 6px;
+            outline: none;
+        }
+
+        .refresh-btn { cursor: pointer; color: var(--primary); font-size: 1.3rem; transition: color 0.2s; }
+        .refresh-btn:hover { color: #60a5fa; }
+        .refreshing { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        
+        .progress-bar-container {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 14px 0;
+            border: 1px solid var(--border-color);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            transition: width 0.5s ease;
+        }
+
+        .log-container {
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8rem;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .log-entry {
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+        }
+        .log-entry:hover { background: rgba(255, 255, 255, 0.02); }
+        .type-compra { color: var(--success); font-weight: bold; }
+        .type-venta { color: var(--danger); font-weight: bold; }
+        .type-ajuste { color: var(--text-muted); }
+        .type-trade { color: var(--primary); font-weight: bold; }
+
+        /* Estilo select de IA */
+        .form-select-dark {
+            background-color: #0f172a;
+            color: #f8fafc;
+            border: 1px solid var(--border-color);
+        }
+        .form-select-dark:focus {
+            background-color: #0f172a;
+            color: #f8fafc;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+        }
+
+        /* Estilos de inputs de modal */
+        .form-control-dark {
+            background-color: #0f172a;
+            color: #f8fafc;
+            border: 1px solid var(--border-color);
+        }
+        .form-control-dark:focus {
+            background-color: #0f172a;
+            color: #f8fafc;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+        }
+
+        .btn-outline-primary-glow {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        .btn-outline-primary-glow:hover {
+            background-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <!-- Top Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0 fw-extrabold text-white d-flex align-items-center">
+                <i class="bi bi-cpu text-primary me-2"></i> ArbitrajeIntegral
+                <span class="badge bg-primary fs-8 ms-2">PRO v3</span>
+            </h3>
+            <span class="text-muted small" id="last-update">Sincronizando red P2P...</span>
+        </div>
+        <div class="d-flex gap-3 align-items-center">
+            <button class="btn btn-outline-primary-glow btn-sm px-3" data-bs-toggle="modal" data-bs-target="#tradeModal">
+                <i class="bi bi-plus-circle me-1"></i> Nueva Operación
+            </button>
+            <div class="refresh-btn" id="manual-refresh" onclick="fetchData()">
+                <i class="bi bi-arrow-clockwise"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Mejor compra (USDT)</div>
+                <div class="stat-value text-buy" id="m-best-buy">$0.00</div>
+                <div class="stat-sub" id="m-best-buy-name">-</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Mejor venta (USDT)</div>
+                <div class="stat-value text-sell" id="m-best-sell">$0.00</div>
+                <div class="stat-sub" id="m-best-sell-name">-</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Spread Máximo Cruzado</div>
+                <div class="stat-value text-primary" id="m-spread">$0.00</div>
+                <div class="stat-sub" id="m-spread-pct">0.00%</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Saldos Consolidados</div>
+                <div class="stat-value" id="m-total-usdt">0.00 USDT</div>
+                <div class="stat-sub" id="m-total-ars">$0.00 ARS</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consolidated Prices Table -->
+    <div class="section-card">
+        <div class="section-title">
+            <span><i class="bi bi-grid-3x3-gap text-primary me-2"></i> Tabla Consolidada de Precios por Exchange</span>
+            <span class="text-muted small" style="font-size: 0.75rem;">USDT/ARS</span>
+        </div>
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Exchange</th>
+                        <th>Taker COMPRA (Menor precio Venta)</th>
+                        <th>Taker VENTA (Mayor precio Compra)</th>
+                        <th>Spread local</th>
+                        <th>Liquidez total</th>
+                        <th>Actualización</th>
+                    </tr>
+                </thead>
+                <tbody id="consolidated-table-body">
+                    <tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary spinner-border-sm" role="status"></div> Cargando datos concurrentes...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Arbitrage Opportunities and AI Verdict -->
+    <div class="row mb-4">
+        <!-- Cross-Exchange Opportunities -->
+        <div class="col-md-8">
+            <div class="section-card h-100 mb-0">
+                <div class="section-title">
+                    <span><i class="bi bi-lightning-charge text-success me-2"></i> Oportunidades de Arbitraje Cruzado (Cross-Exchange)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Ruta (Compra ➔ Venta)</th>
+                                <th>Precio Compra</th>
+                                <th>Precio Venta</th>
+                                <th>Spread Bruto</th>
+                                <th>ROI Neto (100u)</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="opportunities-table-body">
+                            <tr><td colspan="7" class="text-center py-3 text-muted">Buscando asimetrías de precios en paralelo...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="commission-breakdown" class="mt-3 p-3 bg-dark rounded border border-secondary d-none">
+                    <h6 class="text-primary small fw-bold mb-2 uppercase text-center">Desglose de Comisiones (Estimado 100 USDT)</h6>
+                    <div class="row text-center g-2">
+                        <div class="col-3">
+                            <div class="text-muted" style="font-size: 0.7rem;">Fee Compra</div>
+                            <div id="br-fee-buy" class="text-white fw-bold small">-</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="text-muted" style="font-size: 0.7rem;">Fee Venta</div>
+                            <div id="br-fee-sell" class="text-white fw-bold small">-</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="text-muted" style="font-size: 0.7rem;">Spread Neto</div>
+                            <div id="br-spread-neto" class="text-success fw-bold small">-</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="text-muted" style="font-size: 0.7rem;">Ganancia Real</div>
+                            <div id="br-profit-ars" class="text-white fw-bold small">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div id="spread-progress" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <p class="small text-muted mb-0" id="spread-detail">Analizando mercados concurrentes...</p>
+            </div>
+        </div>
+
+        <!-- Virtual Assistant -->
+        <div class="col-md-4">
+            <div class="section-card h-100 mb-0 border-start border-4" id="ai-verdict-border" style="border-left-color: var(--border-color) !important;">
+                <div class="section-title d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-robot text-primary me-2"></i> Auditor IA <span class="badge bg-secondary ms-1" id="ai-status-badge">...</span></span>
+                    <select class="form-select form-select-sm form-select-dark w-auto" id="ai-provider-select" style="font-size: 0.75rem; padding: 2px 24px 2px 8px;">
+                        <option value="ollama" selected>Local (Ollama)</option>
+                        <option value="auto">Auto (Failover)</option>
+                        <option value="gemini">Gemini (Cloud)</option>
+                        <option value="groq">Groq (Fast)</option>
+                    </select>
+                </div>
+                <div id="ai-verdict-content">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+                        <p class="mt-2 text-muted small">El orquestador está procesando el contexto...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Order Books -->
+    <div class="row g-4 mb-4">
+        <!-- Top 10 Buy (Taker Compra / Adv Sells) -->
+        <div class="col-md-6">
+            <div class="section-card">
+                <div class="section-title">
+                    <span><i class="bi bi-arrow-down-left-circle text-success me-2"></i> Top 8 Anuncios VENTA (Taker compra USDT)</span>
+                    <select class="form-select form-select-sm form-select-dark w-auto" id="book-buy-exchange" onchange="renderSpecificBooks()" style="font-size: 0.75rem;">
+                        <option value="Binance">Binance</option>
+                        <option value="Bybit">Bybit</option>
+                        <option value="OKX">OKX</option>
+                    </select>
+                </div>
+                <table class="custom-table">
+                    <thead>
+                        <tr><th>#</th><th>Anunciante</th><th>Precio</th><th>Disponible</th><th>Métodos</th></tr>
+                    </thead>
+                    <tbody id="buy-ads-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top 10 Sell (Taker Venta / Adv Buys) -->
+        <div class="col-md-6">
+            <div class="section-card">
+                <div class="section-title">
+                    <span><i class="bi bi-arrow-up-right-circle text-danger me-2"></i> Top 8 Anuncios COMPRA (Taker vende USDT)</span>
+                    <select class="form-select form-select-sm form-select-dark w-auto" id="book-sell-exchange" onchange="renderSpecificBooks()" style="font-size: 0.75rem;">
+                        <option value="Binance">Binance</option>
+                        <option value="Bybit">Bybit</option>
+                        <option value="OKX">OKX</option>
+                    </select>
+                </div>
+                <table class="custom-table">
+                    <thead>
+                        <tr><th>#</th><th>Anunciante</th><th>Precio</th><th>Disponible</th><th>Métodos</th></tr>
+                    </thead>
+                    <tbody id="sell-ads-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallets Grid -->
+    <div class="section-card">
+        <div class="section-title">
+            <span><i class="bi bi-wallet2 text-primary me-2"></i> Gestión de Saldos en Carteras</span>
+            <button class="btn btn-sm btn-outline-primary" onclick="showAddWalletModal()">+ Agregar Plataforma</button>
+        </div>
+        <div class="wallet-grid" id="wallet-container"></div>
+    </div>
+
+    <!-- Movement Log -->
+    <div class="section-card mb-0">
+        <div class="section-title">
+            <span><i class="bi bi-journals text-primary me-2"></i> Registro Histórico de Transacciones</span>
+        </div>
+        <div class="log-container" id="log-container"></div>
+    </div>
+</div>
+
+<!-- Modal Cargar Operación -->
+<div class="modal fade" id="tradeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-white">Nueva Operación P2P</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="trade-form">
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <label class="form-label small text-muted">Fecha y Hora</label>
+                            <input type="datetime-local" class="form-control form-control-dark" id="trade-datetime" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Tipo de Operación</label>
+                        <select class="form-select form-select-dark" id="trade-type" required>
+                            <option value="COMPRA">COMPRA (Doy ARS, recibo USDT)</option>
+                            <option value="VENTA">VENTA (Doy USDT, recibo ARS)</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-muted">Cantidad USDT</label>
+                            <input type="number" step="any" class="form-control form-control-dark" id="trade-usdt" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted">Total ARS</label>
+                            <input type="number" step="any" class="form-control form-control-dark" id="trade-ars" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Wallet USDT (Destino / Origen)</label>
+                        <select class="form-select form-select-dark" id="trade-wallet-usdt" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Wallet ARS (Origen / Destino)</label>
+                        <select class="form-select form-select-dark" id="trade-wallet-ars" required></select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm px-4" onclick="executeTrade()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Agregar Wallet -->
+<div class="modal fade" id="addWalletModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-white">Agregar Cartera P2P</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Nombre de la Plataforma / Banco</label>
+                    <input type="text" class="form-control form-control-dark" id="new-wallet-name" placeholder="Ej: Brubank">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Tipo de Moneda</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm flex-fill active" id="btn-type-ars" onclick="setWalletType('ARS')">ARS (Pesos)</button>
+                        <button class="btn btn-outline-secondary btn-sm flex-fill" id="btn-type-usdt" onclick="setWalletType('USDT')">USDT (Crypto)</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="confirmAddWallet()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let currentData = null;
+    let selectedWalletType = 'ARS';
+    const tradeModal = new bootstrap.Modal(document.getElementById('tradeModal'));
+    const addWalletModal = new bootstrap.Modal(document.getElementById('addWalletModal'));
+
+    async function fetchData() {
+        const refreshIcon = document.querySelector('#manual-refresh i');
+        refreshIcon.classList.add('refreshing');
+        try {
+            const response = await fetch('/api/dashboard_data');
+            const data = await response.json();
+            currentData = data;
+            renderDashboard(data);
+            updateTradeSelects(data.stock);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+            refreshIcon.classList.remove('refreshing');
+        }
+    }
+
+    function renderDashboard(data) {
+        // Encontrar mejores precios absolutos
+        const bestBuyPrice = data.best_buy?.price || 0;
+        const bestSellPrice = data.best_sell?.price || 0;
+        
+        document.getElementById('m-best-buy').innerText = formatCurrency(bestBuyPrice);
+        document.getElementById('m-best-buy-name').innerText = (data.best_buy?.advertiser_name || '-') + (data.best_buy?.exchange ? ` (${data.best_buy.exchange})` : '');
+        document.getElementById('m-best-sell').innerText = formatCurrency(bestSellPrice);
+        document.getElementById('m-best-sell-name').innerText = (data.best_sell?.advertiser_name || '-') + (data.best_sell?.exchange ? ` (${data.best_sell.exchange})` : '');
+        
+        document.getElementById('m-spread').innerText = formatCurrency(data.metrics.spread);
+        document.getElementById('m-spread-pct').innerText = (data.metrics.spread / (bestSellPrice || 1) * 100).toFixed(3) + '%';
+        document.getElementById('m-total-usdt').innerText = formatUSDT(data.metrics.total_usdt);
+        document.getElementById('m-total-ars').innerText = formatCurrency(data.metrics.total_ars);
+        document.getElementById('last-update').innerText = 'Actualización en tiempo real: ' + new Date().toLocaleTimeString();
+
+        // 1. Renderizar Tabla Consolidada por Exchange
+        renderConsolidatedTable(data.unified_state);
+
+        // 2. Renderizar Tabla de Oportunidades
+        renderOpportunitiesTable(data.opportunities, data.metrics.min_spread);
+
+        // 3. Renderizar Libros de Anuncios específicos
+        renderSpecificBooks();
+
+        // 4. Carteras
+        renderWallets(data.stock, bestBuyPrice || 1000);
+
+        // 5. Historial de Transacciones
+        renderLogs(data.movements);
+    }
+
+    function renderConsolidatedTable(state) {
+        let html = '';
+        for (const [ex, data] of Object.entries(state)) {
+            const bestBuyAd = data.buy_ads?.[0]; // Taker Compra (Anunciante Vende)
+            const bestSellAd = data.sell_ads?.[0]; // Taker Venta (Anunciante Compra)
+            
+            const buyVal = bestSellAd ? formatCurrency(bestSellAd.price) : 'Sin datos';
+            const sellVal = bestBuyAd ? formatCurrency(bestBuyAd.price) : 'Sin datos';
+            const spread = (bestBuyAd && bestSellAd) ? formatCurrency(bestBuyAd.price - bestSellAd.price) : 'N/A';
+            
+            // Calcular liquidez sumando disponible en USDT
+            let liquidez = 0.0;
+            const ads = data.buy_ads || [];
+            ads.forEach(ad => liquidez += ad.available || 0);
+
+            const statusClass = data.status === 'Activo' ? 'active' : 'error';
+            const updateTime = data.last_update ? new Date(data.last_update).toLocaleTimeString() : 'N/A';
+
+            html += `
+                <tr>
+                    <td class="fw-bold"><span class="status-dot ${statusClass}"></span> ${ex}</td>
+                    <td class="price-up">${buyVal}</td>
+                    <td class="price-down">${sellVal}</td>
+                    <td class="fw-bold">${spread}</td>
+                    <td>${formatUSDT(liquidez)}</td>
+                    <td class="text-muted small">${updateTime}</td>
+                </tr>
+            `;
+        }
+        document.getElementById('consolidated-table-body').innerHTML = html;
+    }
+
+    function renderOpportunitiesTable(opportunities, minSpread) {
+        if (!opportunities || opportunities.length === 0) {
+            document.getElementById('opportunities-table-body').innerHTML = `
+                <tr><td colspan="7" class="text-center py-3 text-muted">Buscando asimetrías de precios en paralelo...</td></tr>
+            `;
+            document.getElementById('commission-breakdown').classList.add('d-none');
+            return;
+        }
+
+        let html = '';
+        opportunities.forEach(opp => {
+            const isProfitable = opp.roi_pct >= (opp.type === 'TAKER' ? 0.4 : 0.6);
+            const badgeClass = isProfitable ? 'bg-rentable' : (opp.roi_pct > 0 ? 'bg-warning' : 'bg-no-rentable');
+            const rowHighlightClass = isProfitable ? 'style="background: rgba(16, 185, 129, 0.04); cursor: pointer;"' : 'style="cursor: pointer;"';
+            
+            const typeBadge = opp.type === 'TAKER' 
+                ? '<span class="badge bg-info text-dark fw-bold" style="font-size: 0.7rem;">TAKER</span>' 
+                : '<span class="badge bg-warning text-dark fw-bold" style="font-size: 0.7rem;">MAKER</span>';
+
+            html += `
+                <tr ${rowHighlightClass} onclick="showOpportunityDetail(${JSON.stringify(opp).replace(/"/g, '&quot;')})">
+                    <td>${typeBadge}</td>
+                    <td class="fw-bold text-white">
+                        <span class="badge bg-dark border text-muted px-2 py-1 me-1">${opp.buy_exchange}</span> ➔ 
+                        <span class="badge bg-primary px-2 py-1 ms-1">${opp.sell_exchange}</span>
+                    </td>
+                    <td class="price-up">${formatCurrency(opp.buy_price)}</td>
+                    <td class="price-down">${formatCurrency(opp.sell_price)}</td>
+                    <td class="fw-bold text-primary">${opp.spread_bruto >= 0 ? '+' : ''}${formatCurrency(opp.spread_bruto)}</td>
+                    <td class="fw-bold ${opp.roi_pct >= 0 ? 'text-success' : 'text-danger'}">${opp.roi_pct}% (${opp.profit_ars} ARS)</td>
+                    <td><span class="badge-status ${badgeClass}">${opp.status_label}</span></td>
+                </tr>
+            `;
+        });
+        document.getElementById('opportunities-table-body').innerHTML = html;
+
+        // Spread progress
+        const bestOpp = opportunities[0];
+        document.getElementById('spread-progress').style.width = Math.min(100, (bestOpp.spread_bruto / minSpread) * 100) + '%';
+        document.getElementById('spread-detail').innerText = `Mejor oportunidad cruzada (${bestOpp.buy_exchange} ➔ ${bestOpp.sell_exchange}): +$${bestOpp.spread_bruto} ARS vs umbral mínimo ($${minSpread})`;
+        
+        // Mostrar detalle de la mejor por defecto
+        showOpportunityDetail(bestOpp);
+    }
+
+    function showOpportunityDetail(opp) {
+        document.getElementById('commission-breakdown').classList.remove('d-none');
+        
+        // Estos campos asumen que el backend envía los detalles del cálculo (DecisionEngine.calculate_net_roi)
+        // Por ahora estimamos si no están presentes, pero el motor ya los calcula.
+        // Nota: Necesitaríamos que get_all_opportunities incluya los campos fee_buy_ars, fee_sell_ars, etc.
+        
+        document.getElementById('br-fee-buy').innerText = opp.fee_buy_ars ? formatCurrency(opp.fee_buy_ars) : 'N/D';
+        document.getElementById('br-fee-sell').innerText = opp.fee_sell_ars ? formatCurrency(opp.fee_sell_ars) : 'N/D';
+        document.getElementById('br-spread-neto').innerText = formatCurrency(opp.profit_ars / 100) + ' / u';
+        document.getElementById('br-profit-ars').innerText = formatCurrency(opp.profit_ars);
+        
+        const spreadNetoEl = document.getElementById('br-spread-neto');
+        spreadNetoEl.className = opp.profit_ars >= 0 ? 'text-success fw-bold small' : 'text-danger fw-bold small';
+    }
+
+    function renderSpecificBooks() {
+        if (!currentData || !currentData.unified_state) return;
+        
+        const buyEx = document.getElementById('book-buy-exchange').value;
+        const sellEx = document.getElementById('book-sell-exchange').value;
+        
+        // Cargar anuncios Taker Compra (Advertiser sells -> sell_ads)
+        const buyAds = currentData.unified_state[buyEx]?.sell_ads || [];
+        // Cargar anuncios Taker Venta (Advertiser buys -> buy_ads)
+        const sellAds = currentData.unified_state[sellEx]?.buy_ads || [];
+        
+        renderAdsTable('buy-ads-body', buyAds, true);
+        renderAdsTable('sell-ads-body', sellAds, false);
+    }
+
+    function renderAdsTable(id, ads, isBuy) {
+        if (!ads || ads.length === 0) {
+            document.getElementById(id).innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Sin anuncios para este exchange</td></tr>`;
+            return;
+        }
+        
+        document.getElementById(id).innerHTML = ads.slice(0, 8).map((ad, i) => `
+            <tr>
+                <td>${i+1}</td>
+                <td><span class="text-white fw-semibold">${ad.advertiser_name}</span></td>
+                <td class="${isBuy ? 'price-up' : 'price-down'} fw-bold">${formatCurrency(ad.price)}</td>
+                <td>${formatUSDT(ad.available)}</td>
+                <td class="small text-muted" style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <span title="${ad.methods?.join(', ')}">${ad.methods?.join(', ') || '-'}</span>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderWallets(stock, refPrice) {
+        let html = '';
+        for (const [platform, assets] of Object.entries(stock)) {
+            if (platform === 'last_update') continue;
+            const code = platform.substring(0, 3).toUpperCase();
+            const isUSDT = assets.USDT !== undefined && assets.USDT > 0;
+            const asset = isUSDT ? 'USDT' : 'ARS';
+            const amount = assets[asset] || 0;
+            const equiv = isUSDT ? formatCurrency(amount * refPrice) : formatUSDT(amount / refPrice);
+
+            html += `
+                <div class="wallet-card">
+                    <div class="wallet-name">
+                        <span class="wallet-code">${code}</span> 
+                        <span class="flex-grow-1">${platform}</span>
+                        <i class="bi bi-trash text-muted small ms-2 cursor-pointer" onclick="deleteWallet('${platform}')" style="cursor: pointer;"></i>
+                    </div>
+                    <div class="wallet-amount" onclick="makeEditable(this, '${platform}', '${asset}')">
+                        ${isUSDT ? formatUSDT(amount) : formatCurrency(amount)}
+                    </div>
+                    <div class="wallet-equiv">= ${equiv}</div>
+                </div>
+            `;
+        }
+        document.getElementById('wallet-container').innerHTML = html;
+    }
+
+    async function deleteWallet(platform) {
+        if (!confirm(`¿Estás seguro de que quieres eliminar la wallet "${platform}"?`)) return;
+        try {
+            const res = await fetch(`/api/delete_wallet?platform=${platform}`, {method: 'POST'});
+            if ((await res.json()).success) fetchData();
+        } catch (e) { alert('Error al eliminar wallet'); }
+    }
+
+    function renderLogs(movements) {
+        document.getElementById('log-container').innerHTML = movements.map(m => `
+            <div class="log-entry">
+                <span>
+                    <span class="text-muted">[${m.timestamp}]</span> 
+                    <span class="type-${m.type.toLowerCase()}">${m.type}</span>
+                </span>
+                <span class="text-white-50">${m.notes || (m.platform + ': ' + m.amount + ' ' + m.asset)}</span>
+            </div>
+        `).join('');
+    }
+
+    function updateTradeSelects(stock) {
+        const usdtSel = document.getElementById('trade-wallet-usdt');
+        const arsSel = document.getElementById('trade-wallet-ars');
+        let usdtHtml = '', arsHtml = '';
+        for (const p in stock) {
+            if (p === 'last_update') continue;
+            usdtHtml += `<option value="${p}">${p}</option>`;
+            arsHtml += `<option value="${p}">${p}</option>`;
+        }
+        usdtSel.innerHTML = usdtHtml;
+        arsSel.innerHTML = arsHtml;
+    }
+
+    async function executeTrade() {
+        const dtInput = document.getElementById('trade-datetime').value;
+        const type = document.getElementById('trade-type').value;
+        const usdt = document.getElementById('trade-usdt').value;
+        const ars = document.getElementById('trade-ars').value;
+        const wUsdt = document.getElementById('trade-wallet-usdt').value;
+        const wArs = document.getElementById('trade-wallet-ars').value;
+        
+        if (!usdt || !ars || !dtInput) return alert('Completar todos los campos');
+        const timestamp = dtInput.replace('T', ' ') + ':00';
+        
+        try {
+            const res = await fetch(`/api/execute_trade?trade_type=${type}&usdt_amount=${usdt}&ars_amount=${ars}&usdt_platform=${wUsdt}&ars_platform=${wArs}&timestamp=${encodeURIComponent(timestamp)}`, {method: 'POST'});
+            if ((await res.json()).success) {
+                tradeModal.hide();
+                fetchData();
+            }
+        } catch (e) { alert('Error al procesar operación'); }
+    }
+
+    function showAddWalletModal() { addWalletModal.show(); }
+    function setWalletType(t) {
+        selectedWalletType = t;
+        document.getElementById('btn-type-ars').classList.toggle('active', t === 'ARS');
+        document.getElementById('btn-type-usdt').classList.toggle('active', t === 'USDT');
+    }
+    async function confirmAddWallet() {
+        const name = document.getElementById('new-wallet-name').value;
+        if (!name) return;
+        await saveValue(name, selectedWalletType, 0);
+        addWalletModal.hide();
+        document.getElementById('new-wallet-name').value = '';
+    }
+
+    function makeEditable(el, platform, asset) {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = currentData.stock[platform][asset];
+        input.className = 'editable-input';
+        input.onblur = () => saveValue(platform, asset, input.value);
+        input.onkeydown = (e) => { if (e.key === 'Enter') saveValue(platform, asset, input.value); if (e.key === 'Escape') fetchData(); };
+        el.parentNode.replaceChild(input, el);
+        input.focus();
+    }
+
+    async function saveValue(platform, asset, val) {
+        try {
+            await fetch(`/api/update_stock?platform=${platform}&asset=${asset}&amount=${val}&op=SET`, {method: 'POST'});
+            fetchData();
+        } catch (e) { fetchData(); }
+    }
+
+    function formatCurrency(v) { return new Intl.NumberFormat('es-AR', {style: 'currency', currency: 'ARS'}).format(v); }
+    function formatUSDT(v) { return new Intl.NumberFormat('es-AR', {minimumFractionDigits: 2}).format(v) + ' USDT'; }
+
+    async function fetchAIVerdict() {
+        const badge = document.getElementById('ai-status-badge');
+        const border = document.getElementById('ai-verdict-border');
+        const content = document.getElementById('ai-verdict-content');
+        const provider = document.getElementById('ai-provider-select').value;
+        
+        badge.innerText = 'Auditando...';
+        badge.className = 'badge bg-secondary';
+
+        try {
+            const response = await fetch(`/api/ai_verdict?provider=${provider}`);
+            const data = await response.json();
+            
+            if (data.error) {
+                content.innerHTML = `<div class="alert alert-warning small">${data.error}</div>`;
+                badge.innerText = 'Error';
+                return;
+            }
+
+            const colors = {
+                'EJECUTAR': 'success',
+                'PESCA': 'warning',
+                'STAY': 'danger'
+            };
+            const color = colors[data.estado] || 'secondary';
+            
+            badge.innerText = data.estado;
+            badge.className = `badge bg-${color}`;
+            border.style.setProperty('border-left-color', `var(--${color})`, 'important');
+
+            content.innerHTML = `
+                <div class="row g-2 mb-3 text-center bg-dark p-2 rounded border border-secondary">
+                    <div class="col-6 border-end border-secondary">
+                        <span class="text-muted" style="font-size: 0.65rem;">COMPRAR EN</span><br>
+                        <span class="badge bg-success small mb-1">${data.sugerencia_compra.exchange}</span><br>
+                        <span class="fs-6 fw-bold text-white">${formatCurrency(data.sugerencia_compra.precio)}</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted" style="font-size: 0.65rem;">VENDER EN</span><br>
+                        <span class="badge bg-primary small mb-1">${data.sugerencia_venta.exchange}</span><br>
+                        <span class="fs-6 fw-bold text-white">${formatCurrency(data.sugerencia_venta.precio)}</span>
+                    </div>
+                </div>
+                <div class="mb-3 d-flex justify-content-between">
+                    <span class="text-muted small">ROI Neto Proyectado:</span>
+                    <span class="fw-bold text-success">${data.spread_neto} ARS / USDT</span>
+                </div>
+                ${data.alerta ? `<div class="alert alert-danger py-1 px-2 small mb-3"><i class="bi bi-exclamation-triangle"></i> ${data.alerta}</div>` : ''}
+                <div class="p-3 bg-dark rounded border border-secondary small text-white-50 mb-3" style="font-style: italic; line-height: 1.4;">
+                    "${data.sintesis}"
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-light text-dark" style="font-size: 0.65rem;">Cerebro: ${data.fuente || 'Ollama'}</span>
+                </div>
+            `;
+
+        } catch (e) {
+            content.innerHTML = `<div class="alert alert-danger small">Fallo de conexión con Auditor IA</div>`;
+        }
+    }
+
+    document.getElementById('ai-provider-select').addEventListener('change', fetchAIVerdict);
+
+    setInterval(fetchData, 25000);
+    setInterval(fetchAIVerdict, 55000);
+    fetchData();
+    fetchAIVerdict();
+    
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('trade-datetime').value = now.toISOString().slice(0, 16);
+</script>
+</body>
+</html>
